@@ -12,7 +12,6 @@ function Layout() {
       <main className='flex-grow max-w-7xl mx-auto'>
         <Outlet />
       </main>
-      <Footer></Footer>
     </div>
   )
 }
