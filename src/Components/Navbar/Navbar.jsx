@@ -3,8 +3,8 @@ import { Link } from 'react-router'
 
 export const Navbar = () => {
   const links=<>
-  <Link className='mr-2' to="/view-students">View student Info</Link>
-  <Link className='mr-2' to="/add-student">Add student Info</Link>
+  <Link className='mr-2 btn btn-primary' to="/view-students">View student Info</Link>
+  <Link className='mr-2 btn btn-primary' to="/add-student">Add student Info</Link>
   </>
   return (
 <div className="navbar bg-base-100 shadow-sm">
