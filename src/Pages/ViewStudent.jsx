@@ -10,7 +10,7 @@ export default function ViewStudentsPage() {
   const [selectedStudent, setSelectedStudent] = useState("");
 
   const { register, handleSubmit, reset } = useForm({
-    defaulvalues: selectedStudent,
+    defaultValues: selectedStudent,
   });
   const [studentsData, setStudentsData] = useState([]);
   const modalRef = useRef();
