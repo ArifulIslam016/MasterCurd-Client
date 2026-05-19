@@ -4,6 +4,7 @@ import instance from "../Components/contexts/Instance";
 import { MdDeleteSweep } from "react-icons/md";
 import { FaUserEdit } from "react-icons/fa";
 import { useForm } from "react-hook-form";
+import modal from "daisyui/components/modal";
 
 export default function ViewStudentsPage() {
   const [selectedStudent, setSelectedStudent] = useState("");
@@ -36,8 +37,46 @@ export default function ViewStudentsPage() {
     setSelectedStudent(student);
     modalRef.current.showModal();
   };
-  const handleFormSubmit = (e) => {
-    console.log(e)
+  const handleFormSubmit = async (e) => {
+    // const finalCourseName = data?.courseName || data?.course?.[0]?.courseName;
+    // const finalCourseFee = data?.courseFee || data?.course?.[0]?.courseFee;
+    // const finalDepartment =
+    //   data?.department || data?.departmentInfo?.[0]?.department;
+    // const finalDeptCode = data?.deptCode || data?.departmentInfo?.[0]?.deptCode;
+    console.log(e);
+    const formattedData = {
+      studentName: e.studentName,
+      studentImage: e.studentImage,
+      studentAge: Number(e.studentAge),
+      skills:
+        typeof e.skills === "string"
+          ? e.skills
+              .split(",")
+              .map((skill) => skill.trim())
+              .filter(Boolean)
+          : Array.isArray(e.skills)
+            ? e.skills
+            : [],
+      isRegular: Boolean(e.isRegular),
+      department: e.Department[0].department,
+      deptCode: Number(e.Department[0].deptCode),
+      courseName: e?.course?.[0]?.courseName,
+      courseFee: Number(e?.course?.[0]?.courseFee),
+      address: {
+        presentAddress: e.address.presentAddress,
+        city: e.address.city,
+        zipCode: Number(e.address.zipCode),
+      },
+    };
+    const updateResult = await instance.patch(
+      `/updateStudent/${e._id}`,
+      formattedData,
+    );
+    console.log(updateResult);
+
+    if (updateResult.data.StudentRes.modifiedCount) {
+      modalRef.current.close();
+    }
   };
   return (
     <>
