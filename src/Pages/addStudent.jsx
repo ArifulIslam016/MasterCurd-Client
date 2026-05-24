@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import instance from "../Components/contexts/Instance";
 import axios from "axios";
@@ -9,7 +9,34 @@ const StudentRegisterForm = () => {
     handleSubmit,
     formState: { errors },reset
   } = useForm();
+  const [skillsArray, setSkillsArray] = useState([]);
+  const [skillInput, setSkillInput] = useState("");
+  const [skillError, setSkillError] = useState("");
+
+const handleAddSkill = (e) => {
+    e.preventDefault(); 
+    const trimmedSkill = skillInput.trim();
+    if (trimmedSkill !== "") {
+      if (!skillsArray.includes(trimmedSkill)) {
+        setSkillsArray([...skillsArray, trimmedSkill]);
+        setSkillInput(""); 
+        setSkillError(""); 
+      } else {
+        setSkillError("Skill already added!");
+      }
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove) => {
+    setSkillsArray(skillsArray.filter((skill) => skill !== skillToRemove));
+  };
+
   const handleFormSubmit = async (e) => {
+
+    if (skillsArray.length === 0) {
+      setSkillError("Skills are required");
+      return;
+    }
     const ImageBBApi = import.meta.env.VITE_ImageBB_APIKEY;
     // Image uploading here..........
     if (e.studentImage.length > 0) {
@@ -25,9 +52,7 @@ const StudentRegisterForm = () => {
         studentName: e.studentName,
         studentImage: imageUploadResult.data.data.url,
         studentAge: Number(e.studentAge),
-        skills: e.skills
-          ? e.skills.split(",").map((skill) => skill.trim())
-          : [],
+        skills:Array.isArray(skillsArray) ? skillsArray : [],
         isRegular: Boolean(e.isRegular),
         department: e.department,
         deptCode: Number(e.deptCode),
@@ -43,7 +68,9 @@ const StudentRegisterForm = () => {
       const result = await instance.post("/addStudents", studentData);
       if(result.status === 200){
         alert("Student data added successfully!");
+        setSkillsArray([]);
         reset()
+
       } 
     }
   };
@@ -95,7 +122,7 @@ const StudentRegisterForm = () => {
           </div>
 
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Skills (Comma Separated)
               </label>
@@ -110,6 +137,61 @@ const StudentRegisterForm = () => {
           {errors.skills.message}
         </p>
       )}
+            </div> */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Skills (Type & Press Enter/Add)
+              </label>
+              
+              {/* Added Skills Display Area */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {skillsArray.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full flex items-center shadow-sm"
+                  >
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSkill(skill)}
+                      className="ml-2 text-red-500 hover:text-red-700 focus:outline-none font-bold"
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              {/* Input Area */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault(); // Enter চাপলে ফর্ম সাবমিট হবে না
+                      handleAddSkill(e);  // তার বদলে স্কিল অ্যাড হবে
+                    }
+                  }}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="e.g. JavaScript"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddSkill}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition duration-200 font-medium"
+                >
+                  Add
+                </button>
+              </div>
+              
+              {/* Error Message for Skills */}
+              {skillError && (
+                <p className="text-red-500 text-xs font-medium mt-1 animate-in fade-in-50 duration-200">
+                  {skillError}
+                </p>
+              )}
             </div>
             <div className="flex items-center h-full mt-5">
               <input

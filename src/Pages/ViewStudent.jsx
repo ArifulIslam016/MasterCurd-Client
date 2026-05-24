@@ -8,12 +8,16 @@ import modal from "daisyui/components/modal";
 
 export default function ViewStudentsPage() {
   const [selectedStudent, setSelectedStudent] = useState("");
-
   const { register, handleSubmit, reset } = useForm({
     defaultValues: selectedStudent,
   });
   const [studentsData, setStudentsData] = useState([]);
   const modalRef = useRef();
+
+  const [skillsArray, setSkillsArray] = useState([]);
+  const [skillInput, setSkillInput] = useState("");
+  const [skillError, setSkillError] = useState("");
+
   useEffect(() => {
     const studentInfo = async () =>
       await instance
@@ -22,41 +26,58 @@ export default function ViewStudentsPage() {
         .catch((err) => console.log(err));
     studentInfo();
   }, [studentsData]);
+
   useEffect(() => {
     if (selectedStudent) {
       reset(selectedStudent);
+      setSkillsArray(Array.isArray(selectedStudent.skills) ? selectedStudent.skills : []);
+      setSkillInput("");
+      setSkillError("");
+      console.log("Selected Student:", skillsArray);
     }
   }, [selectedStudent, reset]);
+
+  const handleAddSkill = (e) => {
+    e.preventDefault();
+    const trimmedSkill = skillInput.trim();
+    if (trimmedSkill !== "") {
+      if (!skillsArray.includes(trimmedSkill)) {
+        setSkillsArray([...skillsArray, trimmedSkill]);
+        setSkillInput("");
+        setSkillError("");
+      } else {
+        setSkillError("Skill already added!");
+      }
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove) => {
+    setSkillsArray(skillsArray.filter((skill) => skill !== skillToRemove));
+  };
+
   const handleDelete = async (id) => {
     const res = await instance.delete(`deleteStudent/${id}`);
     if (res.data.deletedCount) {
       alert("Student Info Deleted Succesfully");
     }
   };
+
   const handleEdit = async (student) => {
     setSelectedStudent(student);
     modalRef.current.showModal();
   };
+
   const handleFormSubmit = async (e) => {
-    // const finalCourseName = data?.courseName || data?.course?.[0]?.courseName;
-    // const finalCourseFee = data?.courseFee || data?.course?.[0]?.courseFee;
-    // const finalDepartment =
-    //   data?.department || data?.departmentInfo?.[0]?.department;
-    // const finalDeptCode = data?.deptCode || data?.departmentInfo?.[0]?.deptCode;
-    console.log(e);
+    if (skillsArray.length === 0) {
+      setSkillError("Skills are required");
+      return;
+    }
+
     const formattedData = {
       studentName: e.studentName,
       studentImage: e.studentImage,
       studentAge: Number(e.studentAge),
-      skills:
-        typeof e.skills === "string"
-          ? e.skills
-              .split(",")
-              .map((skill) => skill.trim())
-              .filter(Boolean)
-          : Array.isArray(e.skills)
-            ? e.skills
-            : [],
+      skills: skillsArray,
       isRegular: Boolean(e.isRegular),
       department: e.Department[0].department,
       deptCode: Number(e.Department[0].deptCode),
@@ -68,20 +89,20 @@ export default function ViewStudentsPage() {
         zipCode: Number(e.address.zipCode),
       },
     };
+
     const updateResult = await instance.patch(
       `/updateStudent/${e._id}`,
-      formattedData,
+      formattedData
     );
-    console.log(updateResult);
 
     if (updateResult.data.StudentRes.modifiedCount) {
       modalRef.current.close();
     }
   };
+
   return (
     <>
       <div className="container mx-auto p-6 max-w-7xl">
-        {/* Header section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b pb-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
@@ -93,10 +114,8 @@ export default function ViewStudentsPage() {
           </div>
         </div>
 
-        {/* Grid Layout Setup */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {studentsData.map((student) => {
-            // Nested array standard handling safety check
             const dept = student.Department && student.Department[0];
             const course = student.course && student.course[0];
 
@@ -105,14 +124,12 @@ export default function ViewStudentsPage() {
                 key={student._id}
                 className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between"
               >
-                {/* Header Profile Section */}
                 <div className="p-5 flex items-start gap-4">
                   <img
                     src={student.studentImage}
                     alt={student.studentName}
                     className="w-16 h-16 rounded-full object-cover border-2 border-blue-500/20 bg-gray-100"
                     onError={(e) => {
-                      // Image online napaile automatic name variable diye placeholder banaye nibe
                       e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${student.studentName}`;
                     }}
                   />
@@ -133,13 +150,13 @@ export default function ViewStudentsPage() {
                       <div className="flex space-x-1 ml-1 md:ml-2 lg:ml-4">
                         <div
                           onClick={() => handleEdit(student)}
-                          className="btn text-green-400"
+                          className="btn text-green-400 cursor-pointer"
                         >
                           <FaUserEdit />
                         </div>
                         <div
                           onClick={() => handleDelete(student._id)}
-                          className="btn text-red-500"
+                          className="btn text-red-500 cursor-pointer"
                         >
                           <MdDeleteSweep />
                         </div>
@@ -149,7 +166,6 @@ export default function ViewStudentsPage() {
                       Age: {student.studentAge} Years
                     </p>
 
-                    {/* Skills Section */}
                     <div className="flex flex-wrap gap-1 mt-1">
                       {student.skills &&
                         student.skills.map((skill, index) => (
@@ -164,7 +180,6 @@ export default function ViewStudentsPage() {
                   </div>
                 </div>
 
-                {/* Course & Department Details Info */}
                 <div className="px-5 py-3 bg-gray-50/50 border-t border-b grid grid-cols-2 gap-2 text-xs">
                   <div>
                     <span className="text-gray-400 block font-medium">
@@ -184,7 +199,6 @@ export default function ViewStudentsPage() {
                   </div>
                 </div>
 
-                {/* Bottom Address & Fee info */}
                 <div className="p-5 flex items-center justify-between mt-auto">
                   <div className="text-xs text-gray-500 max-w-[60%]">
                     <span className="font-semibold text-gray-700 block">
@@ -213,6 +227,7 @@ export default function ViewStudentsPage() {
           })}
         </div>
       </div>
+
       <dialog ref={modalRef} id="my_modal_1" className="modal">
         <div className="modal-box">
           <h3 className="font-bold text-lg">Update Student Info!</h3>
@@ -221,10 +236,9 @@ export default function ViewStudentsPage() {
               onSubmit={handleSubmit(handleFormSubmit)}
               className="space-y-6"
             >
-              {/* ১. Student Information */}
               <div>
-                <h3 className="text-lg font-semibold text-blue-600 mb-3">
-                  ১. Student Information
+                <h3 className="text-lg font-semibold text-blue-600 mb-3 mt-4">
+                  Student Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -252,17 +266,60 @@ export default function ViewStudentsPage() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                  <div>
+                  <div className="md:col-span-2">
+                    <div className="flex flex-wrap gap-2 mb-2">
+                {skillsArray.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full flex items-center shadow-sm"
+                  >
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSkill(skill)}
+                      className="ml-2 text-red-500 hover:text-red-700 focus:outline-none font-bold"
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))}
+              </div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Skills (Comma Separated)
+                      Skills (Type & Press Enter/Add)
                     </label>
-                    <input
-                      {...register("skills")}
-                      type="text"
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50 text-sm"
-                      placeholder="e.g. JavaScript, React, Node.js"
-                    />
+
+                 
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={skillInput}
+                        onChange={(e) => setSkillInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddSkill(e);
+                          }
+                        }}
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50 text-sm"
+                        placeholder="e.g. JavaScript"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddSkill}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition duration-200 font-medium text-sm"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {skillError && (
+                      <p className="text-red-500 text-xs font-medium mt-1">
+                        {skillError}
+                      </p>
+                    )}
                   </div>
+
                   <div className="flex items-center h-full mt-5">
                     <input
                       {...register("isRegular")}
@@ -291,10 +348,9 @@ export default function ViewStudentsPage() {
                 </div>
               </div>
 
-              {/* ২. Address Details */}
               <div className="border-t pt-4">
                 <h3 className="text-lg font-semibold text-blue-600 mb-3">
-                  ২. Address Details
+                  Address Details
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-1">
@@ -335,7 +391,7 @@ export default function ViewStudentsPage() {
 
               <div className="border-t pt-4">
                 <h3 className="text-lg font-semibold text-blue-600 mb-3">
-                  ৩. Department Information
+                  Department Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -363,7 +419,6 @@ export default function ViewStudentsPage() {
                 </div>
               </div>
 
-              {/* ৪. Course Information */}
               <div className="border-t pt-4">
                 <h3 className="text-lg font-semibold text-blue-600 mb-3">
                   Course Information
@@ -394,7 +449,6 @@ export default function ViewStudentsPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="modal-action border-t pt-4 mt-6">
                 <button
                   type="button"
