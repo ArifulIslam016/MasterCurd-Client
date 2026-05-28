@@ -122,22 +122,7 @@ const handleAddSkill = (e) => {
           </div>
 
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Skills (Comma Separated)
-              </label>
-              <input
-                {...register("skills", { required: true,message:"Skills are required" })}
-                type="text"
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="e.g. JavaScript, React, Node.js"
-              />
-               {errors.skills && (
-        <p className="text-red-500 text-xs font-medium mt-0.5 animate-in fade-in-50 duration-200">
-          {errors.skills.message}
-        </p>
-      )}
-            </div> */}
+           
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Skills (Type & Press Enter/Add)
